@@ -18,21 +18,21 @@ memory = defaultdict(list)
 rate = defaultdict(list)
 
 async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str, chat_id: int):
-    user_id = update.effective_user.id
-    now = datetime.now()
-    rate[user_id] = [t for t in rate[user_id] if now - t < timedelta(seconds=30)]
-    if len(rate[user_id]) >= 3:
-        await update.message.reply_text("3/30s")
-        return
-    rate[user_id].append(now)
-
-    memory[chat_id].append({"role": "user", "content": text})
-    if len(memory[chat_id]) > 10:
-        memory[chat_id] = memory[chat_id][-10:]
-
-    msg = await update.message.reply_text("Thinking...")
-
     try:
+        user_id = update.effective_user.id
+        now = datetime.now()
+        rate[user_id] = [t for t in rate[user_id] if now - t < timedelta(seconds=30)]
+        if len(rate[user_id]) >= 3:
+            await update.message.reply_text("3/30s")
+            return
+        rate[user_id].append(now)
+
+        memory[chat_id].append({"role": "user", "content": text})
+        if len(memory[chat_id]) > 10:
+            memory[chat_id] = memory[chat_id][-10:]
+
+        msg = await update.message.reply_text("Thinking...")
+
         response = await asyncio.wait_for(
             client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -49,7 +49,7 @@ async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str
         await msg.edit_text(answer or "No reply.")
         memory[chat_id].append({"role": "assistant", "content": answer})
     except:
-        await msg.edit_text("AI busy, try again.")
+        await update.message.reply_text("AI busy, try again.")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
@@ -64,8 +64,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if context.args:
-        await ai_reply(update, context, " ".join(context.args), update.effective_chat.id)
+    try:
+        if context.args:
+            await ai_reply(update, context, " ".join(context.args), update.effective_chat.id)
+    except:
+        pass  # Silent fail
 
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -79,11 +82,9 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             clean = text.replace(f"@{me.username}", "", 1).strip()
             if clean:
                 await ai_reply(update, context, clean, chat.id)
-    except Exception as e:
-        # Silent fail on webhook — no crash
-        pass
+    except:
+        pass  # Silent fail on webhook
 
-# === APP ===
 app = Application.builder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", ask))
