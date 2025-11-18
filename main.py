@@ -68,17 +68,22 @@ async def ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await ai_reply(update, context, " ".join(context.args), update.effective_chat.id)
 
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text or ""
-    chat = update.effective_chat
-    if chat.type == "private" and text.strip():
-        await ai_reply(update, context, text, chat.id)
-        return
-    me = await context.bot.get_me()
-    if f"@{me.username}" in text.lower():
-        clean = text.replace(f"@{me.username}", "", 1).strip()
-        if clean:
-            await ai_reply(update, context, clean, chat.id)
+    try:
+        text = update.message.text or ""
+        chat = update.effective_chat
+        if chat.type == "private" and text.strip():
+            await ai_reply(update, context, text, chat.id)
+            return
+        me = await context.bot.get_me()
+        if f"@{me.username}" in text.lower():
+            clean = text.replace(f"@{me.username}", "", 1).strip()
+            if clean:
+                await ai_reply(update, context, clean, chat.id)
+    except Exception as e:
+        # Silent fail on webhook — no crash
+        pass
 
+# === APP ===
 app = Application.builder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", ask))
