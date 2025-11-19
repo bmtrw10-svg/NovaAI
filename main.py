@@ -1,5 +1,4 @@
 import os
-import asyncio
 from collections import defaultdict
 from datetime import datetime, timedelta
 
@@ -48,11 +47,11 @@ async def ai_reply(update: Update, context: ContextTypes.DEFAULT_TYPE, text: str
         await asyncio.sleep(0.5)
         await msg.edit_text(answer or "No reply.")
         memory[chat_id].append({"role": "assistant", "content": answer})
-    except:
+    except Exception:
         try:
             await update.message.reply_text("AI busy, try again.")
         except:
-            pass  # Ultimate silent fail
+            pass
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -61,19 +60,19 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• DM: Full chat support\n"
             "• Group: Mention me (@NVAaichat_bot) or use /ask\n"
             "• Made in Ethiopia\n\n"
-            "Welcome! I’m NovaAI — your intelligent assistant.\n"
-            "Ask me anything, and I’ll give you clear, fast, and helpful answers.\n\n"
-            "Start typing whenever you’re ready.",
+            "Welcome! I'm NovaAI — your intelligent assistant.\n"
+            "Ask me anything, and I'll give you clear, fast, and helpful answers.\n\n"
+            "Start typing whenever you're ready.",
             parse_mode="Markdown"
         )
-    except:
+    except Exception:
         pass
 
 async def ask(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         if context.args:
             await ai_reply(update, context, " ".join(context.args), update.effective_chat.id)
-    except:
+    except Exception:
         pass
 
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -88,8 +87,8 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             clean = text.replace(f"@{me.username}", "", 1).strip()
             if clean:
                 await ai_reply(update, context, clean, chat.id)
-    except:
-        pass  # Ultimate silent fail — always return 200 to Telegram
+    except Exception:
+        pass  # Always silent — no crash, always 200 OK
 
 app = Application.builder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
