@@ -57,9 +57,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• DM: Full chat support\n"
         "• Group: Mention me (@NVAaichat_bot) or use /ask\n"
         "• Made in Ethiopia\n\n"
-        "Welcome! I’m NovaAI — your intelligent assistant.\n"
-        "Ask me anything, and I’ll give you clear, fast, and helpful answers.\n\n"
-        "Start typing whenever you’re ready.",
+        "Welcome! I'm NovaAI — your intelligent assistant.\n"
+        "Ask me anything, and I'll give you clear, fast, and helpful answers.\n\n"
+        "Start typing whenever you're ready.",
         parse_mode="Markdown"
     )
 
@@ -80,23 +80,18 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if clean:
                 await ai_reply(update, context, clean, chat.id)
     except:
-        pass  # Silent fail
+        pass
 
 app = Application.builder().token(BOT_TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("ask", ask))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
 
-async def main():
-    await app.initialize()  # FIXED: Initialize before webhook
-    await app.start()
-    await app.updater.start_webhook(
+if __name__ == "__main__":
+    # SIMPLE SYNCHRONOUS WEBHOOK — NO ASYNC MAIN, NO IDLE ERROR
+    app.run_webhook(
         listen="0.0.0.0",
         port=PORT,
         url_path="/webhook",
         webhook_url=WEBHOOK_URL
     )
-    await app.updater.idle()
-
-if __name__ == "__main__":
-    asyncio.run(main())
